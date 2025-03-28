@@ -66,8 +66,13 @@ async def upload_endpoint(request: UploadRequest):
 async def handle_upload(request: UploadRequest) -> dict:
     """处理文件上传请求"""
     try:
+        # 使用时间戳作为文件夹名
+        folder_name = datetime.fromtimestamp(request.timestamp).strftime("%Y%m%d%H%M%S")
+        
         # 如果有旧文件夹，先删除
-        delete_device_album(request.device_name, request.folder_name)
+        delete_result = await delete_device_album(request.device_name, folder_name)
+        if not delete_result:
+            logger.warning(f"清理旧文件夹失败: {folder_name}")
         
         # 继续处理上传
         return await process_upload(request)
@@ -75,7 +80,7 @@ async def handle_upload(request: UploadRequest) -> dict:
         logger.error(f"Upload failed: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Upload failed"
+            detail=f"Upload failed: {str(e)}"
         )
 
 async def execute_immediate_task(request: UploadRequest):
