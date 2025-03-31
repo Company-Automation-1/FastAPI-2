@@ -195,9 +195,7 @@ async def execute_immediate_tasks(device_name: str, upload_time: int):
         device_name: 设备名称
         upload_time: 数据上传时间戳
     """
-    logger.info(f"=========================================")
     logger.info(f"开始执行立即任务 - 设备: {device_name}, 时间: {datetime.fromtimestamp(upload_time)}")
-    logger.info(f"=========================================")
     
     try:
         # 1. 执行图片发送任务
@@ -206,9 +204,7 @@ async def execute_immediate_tasks(device_name: str, upload_time: int):
         # 2. 发送操作完成通知
         await send_upload_notification(device_name, upload_time, success)
         
-        logger.info(f"=========================================")
         logger.info(f"所有立即任务完成 - 设备: {device_name}")
-        logger.info(f"=========================================")
     except Exception as e:
         logger.error(f"立即任务执行过程中出现未处理异常: {str(e)}", exc_info=True)
 

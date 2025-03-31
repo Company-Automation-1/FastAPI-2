@@ -18,6 +18,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.upload import router as upload_router
 from app.api.v1.device import router as device_router
+from app.api.v1.logs import router as logs_router
 from app.core.config import Settings
 from app.core.logging import setup_logging
 from app.scheduler.scheduler import start_scheduler, stop_scheduler
@@ -63,6 +64,7 @@ async def shutdown_event():
 # 注册路由
 app.include_router(upload_router)
 app.include_router(device_router)
+app.include_router(logs_router)
 
 # 启动服务器（仅在直接运行时）
 if __name__ == "__main__":
