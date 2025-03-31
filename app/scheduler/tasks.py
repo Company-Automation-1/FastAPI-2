@@ -15,12 +15,12 @@
 import logging
 import os
 import glob
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Dict, Any, Callable, Coroutine, Optional, List
 
 from app.device.adb import adb, ADBException
-from app.core.config import Settings, UPLOAD_DIR
+from app.core.config import Settings, UPLOAD_DIR, format_folder_name, get_shanghai_time
 from app.device.automation import AndroidAutomation
 
 logger = logging.getLogger(__name__)
@@ -80,8 +80,8 @@ async def send_images_to_device(device_name: str, upload_time: int):
         device_storage_path = device_config['storage_path']
         logger.info(f"设备 {device_name} 的存储路径: {device_storage_path}")
         
-        # 3. 创建格式化的时间子目录
-        time_dir = datetime.fromtimestamp(upload_time).strftime("%Y%m%d%H%M%S")
+        # 使用统一的文件夹名称格式化函数
+        time_dir = format_folder_name(upload_time)
         local_dir = UPLOAD_DIR / device_name / time_dir / "imgs"
         remote_dir = f"{device_storage_path.rstrip('/')}/{time_dir}"
         
@@ -164,7 +164,7 @@ async def send_upload_notification(device_name: str, upload_time: int, success: 
         
         # 使用设备配置中的存储路径
         storage_path = device_config['storage_path']
-        time_dir = datetime.fromtimestamp(upload_time).strftime("%Y%m%d%H%M%S")
+        time_dir = format_folder_name(upload_time)
         scan_path = f"{storage_path.rstrip('/')}/{time_dir}"
         
         notification_cmd = [
@@ -195,7 +195,7 @@ async def execute_immediate_tasks(device_name: str, upload_time: int):
         device_name: 设备名称
         upload_time: 数据上传时间戳
     """
-    logger.info(f"开始执行立即任务 - 设备: {device_name}, 时间: {datetime.fromtimestamp(upload_time)}")
+    logger.info(f"开始执行立即任务 - 设备: {device_name}, 时间: {get_shanghai_time(upload_time)}")
     
     try:
         # 1. 执行图片发送任务
@@ -223,7 +223,7 @@ async def perform_data_cleanup(device_name: str, task_time: int) -> bool:
         bool: 清理是否成功
     """
     try:
-        logger.info(f"执行数据清理 - 设备: {device_name}, 计划时间: {datetime.fromtimestamp(task_time)}")
+        logger.info(f"执行数据清理 - 设备: {device_name}, 计划时间: {get_shanghai_time(task_time)}")
         # TODO: 实现数据清理逻辑
         return True  # 暂时返回 True，因为目前没有实际的清理逻辑
     except Exception as e:
@@ -259,7 +259,7 @@ async def perform_content_automation(device_name: str, task_time: int):
             return False
             
         # 构建图片路径
-        time_dir = datetime.fromtimestamp(task_time).strftime("%Y%m%d%H%M%S")
+        time_dir = format_folder_name(task_time)
         local_dir = UPLOAD_DIR / device_name / time_dir / "imgs"
         
         # 检查目录是否存在
@@ -299,7 +299,7 @@ async def get_content_from_file(device_name: str, task_time: int) -> tuple[Optio
         tuple: (标题, 正文内容)
     """
     try:
-        time_dir = datetime.fromtimestamp(task_time).strftime("%Y%m%d%H%M%S")
+        time_dir = format_folder_name(task_time)
         content_dir = UPLOAD_DIR / device_name / time_dir
         
         # 读取content.txt文件

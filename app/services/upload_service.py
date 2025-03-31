@@ -18,9 +18,9 @@ import base64
 import aiofiles
 from pathlib import Path
 from hashlib import sha256
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from app.models.request import UploadRequest
-from app.core.config import UPLOAD_DIR
+from app.core.config import UPLOAD_DIR, format_folder_name
 from app.utils.file_utils import generate_unique_filename
 
 async def process_upload(request: UploadRequest) -> dict:
@@ -61,8 +61,7 @@ def create_directory_structure(request: UploadRequest) -> Path:
     Returns:
         Path: 创建的目录路径
     """
-    dir_time = datetime.fromtimestamp(request.timestamp)
-    time_dir = dir_time.strftime("%Y%m%d%H%M%S")
+    time_dir = format_folder_name(request.timestamp)
     device_dir = UPLOAD_DIR / request.device_name / time_dir
     (device_dir / "imgs").mkdir(parents=True, exist_ok=True)
     return device_dir

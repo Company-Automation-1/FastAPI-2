@@ -24,6 +24,9 @@ PROJECT_DIR = Path(__file__).parent.parent.parent
 UPLOAD_DIR = PROJECT_DIR / os.getenv('UPLOAD_DIR', 'uploads')
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
+# 定义上海时区
+SHANGHAI_TIMEZONE = timezone(timedelta(hours=8))
+
 class Settings:
     """
     应用程序配置类
@@ -94,6 +97,69 @@ class Settings:
 
     # 添加其他方法
     # ... 保留其他方法 ...
+
+def get_shanghai_time(utc_timestamp: int) -> datetime:
+    """
+    将UTC时间戳转换为上海时间
+    注意：输入的时间戳虽然是UTC格式，但实际表示的是上海时间
+    
+    Args:
+        utc_timestamp (int): UTC时间戳（但表示的是上海时间）
+        
+    Returns:
+        datetime: 上海时区的datetime对象
+    """
+    # 将UTC时间戳转换为datetime对象（不带时区信息）
+    utc_dt = datetime.utcfromtimestamp(utc_timestamp)
+    
+    # 将UTC时间转换为上海时间（减去8小时时差）
+    # shanghai_dt = utc_dt - timedelta(hours=8)
+    shanghai_dt = utc_dt
+    # 添加时区信息
+    return shanghai_dt.replace(tzinfo=SHANGHAI_TIMEZONE)
+
+def format_folder_name(utc_timestamp: int) -> str:
+    """
+    格式化文件夹名称
+    
+    Args:
+        utc_timestamp (int): UTC时间戳（但表示的是上海时间）
+        
+    Returns:
+        str: 格式化的文件夹名称 (YYYYMMDDHHmmss)
+    """
+    shanghai_time = get_shanghai_time(utc_timestamp)
+    return shanghai_time.strftime("%Y%m%d%H%M%S")
+
+def get_current_timestamp() -> int:
+    """
+    获取当前的UTC时间戳
+    
+    Returns:
+        int: UTC时间戳
+    """
+    return int(datetime.now(timezone.utc).timestamp())
+
+def debug_time_info(timestamp: int) -> dict:
+    """
+    用于调试的时间信息函数
+    
+    Args:
+        timestamp (int): UTC时间戳
+        
+    Returns:
+        dict: 包含各种时间信息的字典
+    """
+    utc_time = datetime.utcfromtimestamp(timestamp)
+    shanghai_time = get_shanghai_time(timestamp)
+    folder_name = format_folder_name(timestamp)
+    
+    return {
+        "timestamp": timestamp,
+        "utc_time": utc_time.strftime("%Y-%m-%d %H:%M:%S"),
+        "shanghai_time": shanghai_time.strftime("%Y-%m-%d %H:%M:%S"),
+        "folder_name": folder_name
+    }
 
 # 创建全局配置实例
 settings = Settings() 

@@ -16,10 +16,10 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.date import DateTrigger
 from datetime import datetime
 import logging
-from app.core.config import Settings
+from app.core.config import Settings, SHANGHAI_TIMEZONE
 
 logger = logging.getLogger(__name__)
-scheduler = AsyncIOScheduler(timezone=Settings.SCHEDULER_TIMEZONE)
+scheduler = AsyncIOScheduler(timezone=SHANGHAI_TIMEZONE)
 
 def start_scheduler():
     """

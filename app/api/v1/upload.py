@@ -15,6 +15,7 @@ from app.scheduler.scheduler import add_job
 from datetime import datetime, timezone, timedelta
 import logging
 from app.device.del_img import delete_device_album
+from app.core.config import format_folder_name, get_shanghai_time, SHANGHAI_TIMEZONE, get_current_timestamp, debug_time_info
 
 logger = logging.getLogger(__name__)
 
@@ -35,12 +36,16 @@ async def upload_endpoint(request: UploadRequest):
     4. 创建定时任务
     """
     try:
+        # 添加详细的时间调试信息
+        time_info = debug_time_info(request.timestamp)
+        logger.info(f"时间处理信息: {time_info}")
+        
         # 检查任务时间是否已过期
-        current_time = datetime.now(timezone.utc).timestamp()
-        if request.timestamp <= current_time:
+        current_timestamp = get_current_timestamp()
+        if request.timestamp <= current_timestamp:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="任务时间已过期，只能设置未来的任务"
+                detail=f"任务时间已过期，只能设置未来的任务。设定时间：{time_info['shanghai_time']}"
             )
         
         # 处理上传
@@ -66,8 +71,8 @@ async def upload_endpoint(request: UploadRequest):
 async def handle_upload(request: UploadRequest) -> dict:
     """处理文件上传请求"""
     try:
-        # 使用时间戳作为文件夹名
-        folder_name = datetime.fromtimestamp(request.timestamp).strftime("%Y%m%d%H%M%S")
+        # 使用统一的文件夹名称格式化函数
+        folder_name = format_folder_name(request.timestamp)
         
         # 如果有旧文件夹，先删除
         delete_result = await delete_device_album(request.device_name, folder_name)
@@ -97,14 +102,12 @@ async def execute_immediate_task(request: UploadRequest):
 async def create_scheduled_task(request: UploadRequest):
     """创建定时任务"""
     try:
-        # 使用上海时区
-        shanghai_tz = timezone(timedelta(hours=8))
-        trigger_time = datetime.fromtimestamp(request.timestamp, tz=timezone.utc)
-        trigger_time_shanghai = trigger_time.astimezone(shanghai_tz)
+        # 直接使用时间戳创建触发时间
+        trigger_time = get_shanghai_time(request.timestamp)
         
         add_job(
             execute_scheduled_tasks,
-            trigger_time_shanghai,
+            trigger_time,
             device_name=request.device_name,
             task_time=request.timestamp
         )
