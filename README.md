@@ -1,3 +1,5 @@
+# 已废弃
+
 # Device Automation API
 
 基于 FastAPI 的设备自动化管理系统，提供设备管理、文件上传和自动化任务调度功能。
